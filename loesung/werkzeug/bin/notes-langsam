@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# notes-langsam – die langsamsten Anfragen: notes-langsam [anzahl] [logdatei]
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+anzahl="${1:-5}"
+log="${2:-${NOTES_LOG:?fehlt – source ~/sh-lab/setup/env.sh}}"
+[[ $anzahl =~ ^[1-9][0-9]*$ ]] || die "anzahl muss eine Zahl ≥ 1 sein" 2
+[[ -r $log ]] || die "nicht lesbar: $log"
+awk '{printf "%7.1f ms %s %s\n", $9 * 1000, substr($4, 2), $5}' "$log" |
+  sort -rn | head -n "$anzahl"

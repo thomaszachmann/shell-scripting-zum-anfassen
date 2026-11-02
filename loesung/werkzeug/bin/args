@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# args – zeigt jedes Argument in eckigen Klammern
+set -euo pipefail
+echo "$# Argumente:"
+for a in "$@"; do printf '  [%s]\n' "$a"; done

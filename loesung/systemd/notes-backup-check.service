@@ -1,0 +1,6 @@
+[Unit]
+Description=Prüft, ob es ein frisches Backup von notes gibt
+
+[Service]
+Type=oneshot
+ExecStart=%h/sh-lab/werkzeug/bin/notes-backup-check 26

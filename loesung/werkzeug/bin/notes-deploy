@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# notes-deploy – verteilt den Werkzeugkasten: notes-deploy [-n] host…
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+need rsync ssh
+probe=()
+if [[ ${1:-} == -n ]]; then
+  probe=(-n)
+  shift
+fi
+(($# > 0)) || die "Aufruf: $PROG [-n] host…" 2
+quelle="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.."
+
+verteile() {
+  local host=$1
+  rsync -az "${probe[@]}" --delete --exclude .git --exclude tests \
+    "$quelle/" "$host:sh-werkzeug/"
+  ssh -o BatchMode=yes -o ConnectTimeout=5 "$host" \
+    'for f in sh-werkzeug/bin/* sh-werkzeug/lib/*.sh; do bash -n "$f" || exit 1; done'
+}
+
+declare -A pid
+for host in "$@"; do
+  verteile "$host" >"/tmp/notes-deploy.$host.log" 2>&1 &
+  pid[$host]=$!
+done
+fehler=0
+for host in "$@"; do
+  if wait "${pid[$host]}"; then
+    info "$host: ok"
+  else
+    warn "$host: gescheitert – siehe /tmp/notes-deploy.$host.log"
+    fehler=1
+  fi
+done
+exit "$fehler"

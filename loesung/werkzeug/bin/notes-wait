@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# notes-wait – wartet, bis notes antwortet: notes-wait [sekunden]
+set -euo pipefail
+max="${1:-30}"
+until notes-ping >/dev/null 2>&1; do
+  if ((SECONDS >= max)); then
+    echo "notes nach ${max}s nicht erreichbar" >&2
+    exit 1
+  fi
+  sleep 1
+done
+echo "notes bereit nach ${SECONDS}s"

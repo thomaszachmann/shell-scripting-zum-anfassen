@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# notes-remote – Werkzeug auf einem Host ausführen: notes-remote host werkzeug [args…]
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+(($# >= 2)) || die "Aufruf: $PROG host werkzeug [args…]" 2
+host=$1
+shift
+befehl=$(printf '%q ' "$@")
+port=$((18000 + RANDOM % 1000))
+ssh -o BatchMode=yes -o ExitOnForwardFailure=yes \
+  -R "$port:127.0.0.1:${NOTES_URL##*:}" "$host" \
+  "NOTES_URL=http://127.0.0.1:$port PATH=\$HOME/sh-werkzeug/bin:\$PATH $befehl"

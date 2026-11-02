@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# notes-export – schreibt alle Notizen als CSV nach stdout
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+need curl jq
+echo '"id","text"'
+curl -fsS -A notes-export "$(notes_url)/notes" | jq -r '.[] | [.id, .text] | @csv'

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# hallo – das erste Skript im Werkzeugkasten
+echo "Hallo, $USER! Heute ist $(date +%A)."

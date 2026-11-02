@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# notes-add – legt eine Notiz an und gibt ihre ID aus: notes-add Text der Notiz
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+need curl jq
+(($# > 0)) || die "Aufruf: $PROG Text der Notiz" 2
+key="${NOTES_API_KEY:?fehlt – source ~/sh-lab/setup/env.sh}"
+url=$(notes_url)
+
+antwort=$(jq -n --arg t "$*" '{text: $t}' |
+  curl -fsS -A "notes-add" -X POST -H "X-API-Key: $key" \
+    -H 'Content-Type: application/json' -d @- "$url/notes") ||
+  die "Anlegen gescheitert"
+jq -r '.id' <<<"$antwort"

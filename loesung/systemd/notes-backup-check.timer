@@ -1,0 +1,9 @@
+[Unit]
+Description=Backup-Prüfung jede Stunde
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

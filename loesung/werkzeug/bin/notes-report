@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# notes-report – fasst das Zugriffslog von notes zusammen [logdatei]
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+log="${1:-${NOTES_LOG:?fehlt – source ~/sh-lab/setup/env.sh}}"
+[[ -r $log ]] || die "nicht lesbar: $log"
+[[ -s $log ]] || die "Log ist leer: $log"
+
+sed -E 's#(/notes/)[0-9]+#\1:id#' "$log" | awk '
+  {
+    n++; d += $9; status[$7]++; pfad[$5]++; zeit[$5] += $9
+    if ($7 >= 400) fehler++
+    if ($9 > max) { max = $9; langsam = $4 " " $5 }
+  }
+  END {
+    printf "Anfragen: %d\n", n
+    printf "Fehler:   %d (%.1f %%)\n", fehler, fehler * 100 / n
+    printf "Dauer:    Ø %.1f ms, max %.1f ms (%s\")\n",
+      d * 1000 / n, max * 1000, langsam
+    print "--- nach Status"
+    for (s in status) printf "%6d %s\n", status[s], s | "sort -k2"
+    close("sort -k2")
+    print "--- nach Pfad (Anzahl, Ø ms)"
+    sp = "sort -k1,1nr -k2"
+    for (p in pfad) printf "%6d %-12s %6.1f\n", pfad[p], p, zeit[p]*1000/pfad[p] | sp
+  }'

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# notes-watch – überwacht notes: notes-watch [-i sekunden]
+# Signale: TERM/INT beenden geordnet, USR1 meldet die Statistik
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+intervall=5
+anzahl=0
+while getopts ":i:n:h" opt; do
+  case "$opt" in
+    i) intervall="$OPTARG" ;;
+    n) anzahl="$OPTARG" ;;
+    h)
+      echo "Aufruf: $PROG [-i sekunden] [-n anzahl]"
+      exit 0
+      ;;
+    *) die "falsche Option (Hilfe: -h)" 2 ;;
+  esac
+done
+[[ $intervall =~ ^[1-9][0-9]*$ ]] || die "-i braucht eine Zahl ≥ 1" 2
+
+pruefungen=0
+fehler=0
+letzter=""
+stop=0
+trap 'stop=1' TERM INT
+trap 'info "Statistik: $pruefungen Prüfungen, $fehler Fehler"' USR1
+
+info "gestartet (PID $$, alle ${intervall}s)"
+while ((! stop)); do
+  if notes-ping >/dev/null 2>&1; then
+    zustand=ok
+  else
+    zustand=fehler
+    fehler=$((fehler + 1))
+  fi
+  pruefungen=$((pruefungen + 1))
+  ((anzahl > 0 && pruefungen >= anzahl)) && break
+  if [[ $zustand != "$letzter" ]]; then info "Zustand: $zustand"; fi
+  letzter=$zustand
+  sleep "$intervall" &
+  wait $! || true
+done
+info "beendet nach $pruefungen Prüfungen"

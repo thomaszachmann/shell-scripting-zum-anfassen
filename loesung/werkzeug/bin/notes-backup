@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# notes-backup – sichert die Datenbank von notes: notes-backup [-k behalten] [-d ziel]
+set -Eeuo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+trap 'die "Zeile $LINENO: $BASH_COMMAND"' ERR
+
+behalten=7
+ziel="$HOME/sh-lab/backups"
+while getopts ":k:d:h" opt; do
+  case "$opt" in
+    k) behalten="$OPTARG" ;;
+    d) ziel="$OPTARG" ;;
+    h)
+      echo "Aufruf: $PROG [-k behalten] [-d ziel]"
+      exit 0
+      ;;
+    *) die "falsche Option (Hilfe: -h)" 2 ;;
+  esac
+done
+[[ $behalten =~ ^[1-9][0-9]*$ ]] || die "-k braucht eine Zahl ≥ 1" 2
+need docker gzip flock
+mkdir -p "$ziel"
+
+exec 9>"$ziel/.lock"
+flock -n 9 || die "läuft schon ($ziel/.lock)" 0
+
+tmp=$(mktemp "$ziel/.notes-XXXXXX.sql.gz")
+trap 'rm -f "$tmp"' EXIT
+notes_compose exec -T db pg_dump -U notes -d notes | gzip >"$tmp"
+gzip -t "$tmp"
+datei="$ziel/notes-$(date +%Y%m%d-%H%M%S).sql.gz"
+mv "$tmp" "$datei"
+info "gesichert: $datei ($(stat -c %s "$datei") Bytes)"
+
+mapfile -t alle < <(find "$ziel" -maxdepth 1 -name 'notes-*.sql.gz' -printf '%f\n' |
+  sort -r)
+for alt in "${alle[@]:behalten}"; do
+  rm -f -- "$ziel/$alt"
+  info "rotiert: $alt"
+done

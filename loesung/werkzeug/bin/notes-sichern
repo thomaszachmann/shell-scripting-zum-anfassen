@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# notes-sichern – Export atomar ablegen: notes-sichern [ordner]
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+ordner="${1:-$HOME/sh-lab/exporte}"
+mkdir -p "$ordner"
+ziel="$ordner/notes-$(date +%F).csv"
+tmp=$(mktemp "$ordner/.notes-XXXXXX.csv")
+notes-export >"$tmp" || {
+  rm -f "$tmp"
+  die "Export gescheitert"
+}
+mv "$tmp" "$ziel"
+echo "$ziel"

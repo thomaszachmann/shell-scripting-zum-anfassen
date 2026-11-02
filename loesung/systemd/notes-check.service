@@ -1,0 +1,7 @@
+[Unit]
+Description=Prüft, ob notes antwortet
+
+[Service]
+Type=oneshot
+Environment=NOTES_URL=http://127.0.0.1:8080
+ExecStart=%h/sh-lab/werkzeug/bin/notes-check -v

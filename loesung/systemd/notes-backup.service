@@ -1,0 +1,6 @@
+[Unit]
+Description=Sichert die Datenbank von notes
+
+[Service]
+Type=oneshot
+ExecStart=%h/sh-lab/werkzeug/bin/notes-backup -k 14

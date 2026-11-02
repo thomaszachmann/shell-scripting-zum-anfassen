@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# notes-count – gibt die Anzahl der Notizen aus
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+need curl jq
+url=$(notes_url)
+curl -fsS --max-time 3 "$url/notes" 2>/dev/null | jq length ||
+  die "nicht erreichbar: $url"

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# notes-aufraeumen – löscht alte Exporte: notes-aufraeumen [-n] tage ordner
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+probe=0
+if [[ ${1:-} == -n ]]; then
+  probe=1
+  shift
+fi
+(($# == 2)) || die "Aufruf: $PROG [-n] tage ordner" 2
+tage=$1 ordner=$2
+[[ $tage =~ ^[0-9]+$ ]] || die "tage muss eine Zahl sein: $tage" 2
+[[ -d $ordner ]] || die "kein Ordner: $ordner"
+
+n=0
+while IFS= read -r -d '' datei; do
+  if ((probe)); then
+    echo "würde löschen: $datei"
+  else
+    rm -f -- "$datei"
+    info "gelöscht: $datei"
+  fi
+  n=$((n + 1))
+done < <(find "$ordner" -maxdepth 1 -type f -name 'notes-*.csv' -mtime +"$tage" -print0)
+echo "$n Datei(en) älter als $tage Tage"

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# notes-find – Notizen mit einem Wort finden: notes-find wort
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+need curl jq
+(($# == 1)) || die "Aufruf: $PROG wort" 2
+curl -fsS -A notes-find "$(notes_url)/notes" |
+  jq -r --arg w "$1" '.[] | select(.text | test($w; "i")) | .text'

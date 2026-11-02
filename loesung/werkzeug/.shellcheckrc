@@ -1,0 +1,5 @@
+source-path=SCRIPTDIR
+# Fehlendes *) in case ist fast immer ein vergessener Fall
+enable=add-default-case
+# Unterdrücktes set -e in if/&&/|| sichtbar machen
+enable=check-set-e-suppressed

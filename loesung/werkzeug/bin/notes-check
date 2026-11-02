@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# notes-check – prüft Endpunkte von notes
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+
+usage() {
+  cat <<HILFE
+Aufruf: $PROG [-u url] [-t sekunden] [-v] [endpunkt…]
+  -u url       Adresse von notes (Standard: \$NOTES_URL)
+  -t sekunden  Zeitlimit je Anfrage (Standard: 3)
+  -v           jeden Endpunkt einzeln melden
+  -q           keine Ausgabe, nur Exit-Code
+  -h           diese Hilfe
+Ohne Endpunkte: /healthz /notes /version
+Exit-Code: 0 alle ok, 1 mindestens einer gescheitert, 2 falsche Bedienung
+HILFE
+}
+
+url="$(notes_url)"
+timeout=3
+verbose=0
+quiet=0
+while getopts ":u:t:vqh" opt; do
+  case "$opt" in
+    u) url="$OPTARG" ;;
+    t) timeout="$OPTARG" ;;
+    v) verbose=1 ;;
+    q) quiet=1 ;;
+    h)
+      usage
+      exit 0
+      ;;
+    :) die "Option -$OPTARG braucht einen Wert" 2 ;;
+    *) die "unbekannte Option -$OPTARG (Hilfe: -h)" 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+need curl
+endpunkte=("$@")
+((${#endpunkte[@]} > 0)) || endpunkte=(/healthz /notes /version)
+
+declare -A ergebnis=([ok]=0 [fehler]=0)
+for e in "${endpunkte[@]}"; do
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time "$timeout" "$url$e") || true
+  if [[ $code == 2?? ]]; then
+    ergebnis[ok]=$((ergebnis[ok] + 1))
+  else
+    ergebnis[fehler]=$((ergebnis[fehler] + 1))
+  fi
+  ((verbose)) && echo "$code $e"
+done
+((quiet)) || echo "${ergebnis[ok]} ok, ${ergebnis[fehler]} Fehler"
+((ergebnis[fehler] == 0))

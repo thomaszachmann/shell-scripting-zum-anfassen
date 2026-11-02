@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# notes-ping – prüft, ob notes antwortet. Exit-Code 0 = ok
+set -euo pipefail
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/lib.sh"
+need curl
+url="$(notes_url)"
+curl -fsS --max-time 3 "$url/healthz" >/dev/null 2>&1 || die "nicht erreichbar: $url"
+echo "notes ok"
