@@ -1,12 +1,12 @@
-# notes – Demo-Anwendung für „Shell-Scripting zum Anfassen"
+# notes – demo application for *Shell scripting hands-on* (German: *Shell-Scripting zum Anfassen*)
 
-notes-api (Go) speichert Notizen in Postgres. Im Buch steht nginx davor
-(`../notes-stack`) und schreibt ein Zugriffslog, das die Skripte auswerten.
+notes-api (Go) stores notes in Postgres. In the book, nginx sits in front of it
+(`../notes-stack`) and writes an access log that the scripts analyze.
 
-- `POST /notes` legt eine Notiz an und verlangt den Header `X-API-Key`
-  (Laborwert `lab-api-key-123`).
-- `GET /notes` listet alle Notizen als JSON, `GET /healthz` antwortet `ok`,
-  `GET /version` mit der Version, `GET /metrics` mit Kennzahlen im Prometheus-Format.
-- `notes-api migrate` legt die Tabelle an (idempotent).
+- `POST /notes` creates a note and requires the `X-API-Key` header
+  (lab value `lab-api-key-123`).
+- `GET /notes` lists all notes as JSON, `GET /healthz` answers `ok`,
+  `GET /version` with the version, `GET /metrics` with metrics in Prometheus format.
+- `notes-api migrate` creates the table (idempotent).
 
-Bauen (Tag 0): `docker build --build-arg VERSION=0.4.0 -t notes-api:0.4.0 notes-api`
+Build (Day 0): `docker build --build-arg VERSION=0.4.0 -t notes-api:0.4.0 notes-api`
